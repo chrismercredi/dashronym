@@ -1,6 +1,6 @@
 name: dashronym
 description: Inline glossary tooltips for acronyms in Flutter text.
-version: 0.0.2
+version: 0.0.3
 homepage: https://github.com/christophermercredi/dashronym
 repository: https://github.com/christophermercredi/dashronym
 issue_tracker: https://github.com/christophermercredi/dashronym/issues
@@ -15,6 +15,8 @@ environment:
 
 dependencies:
   flutter:
+    sdk: flutter
+  flutter_localizations:
     sdk: flutter
 
 dev_dependencies:

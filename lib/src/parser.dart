@@ -7,6 +7,9 @@ import 'registry.dart';
 import 'theme.dart';
 
 /// Internal parser that turns a string into [InlineSpan] runs with tooltip widgets.
+///
+/// Maintains an in-memory [Lru] cache so repeated calls for the same input and
+/// configuration avoid redoing the parsing work.
 class DashronymParser {
   DashronymParser({
     required this.registry,
@@ -23,6 +26,9 @@ class DashronymParser {
   static final _cache = Lru<String, List<InlineSpan>>(capacity: 256);
 
   /// Converts [input] into a series of inline spans with glossary tooltips.
+  ///
+  /// Returns cached spans when the input, theme, and config match a previously
+  /// parsed string.
   List<InlineSpan> parseToSpans(String input) {
     final cacheKey = [
       input,
@@ -39,6 +45,18 @@ class DashronymParser {
       theme.cardPadding.hashCode,
       theme.hoverShowDelay.inMilliseconds,
       theme.enableHover,
+      theme.cardBorderRadius,
+      theme.cardIcon.codePoint,
+      theme.cardIcon.fontFamily,
+      theme.cardCloseIcon.codePoint,
+      theme.cardCloseIcon.fontFamily,
+      theme.cardIconColor?.value,
+      theme.cardTitleStyle?.hashCode,
+      theme.cardSubtitleStyle?.hashCode,
+      theme.cardContentPadding.hashCode,
+      theme.cardMinLeadingWidth,
+      theme.tooltipOffset.dx,
+      theme.tooltipOffset.dy,
       baseStyle?.hashCode ?? 0,
     ].join('__');
     final cached = _cache.get(cacheKey);
