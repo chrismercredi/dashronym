@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
@@ -35,14 +37,19 @@ class AcronymInline extends StatefulWidget {
   State<AcronymInline> createState() => _AcronymInlineState();
 }
 
-class _AcronymInlineState extends State<AcronymInline> {
+class _AcronymInlineState extends State<AcronymInline>
+    with SingleTickerProviderStateMixin {
   final LayerLink _link = LayerLink();
   final FocusNode _focusNode = FocusNode(debugLabel: 'DashronymInline');
 
   OverlayEntry? _entry;
   bool _hovering = false;
   bool _tooltipVisible = false;
+  Timer? _hoverHideTimer;
   late final TextStyle _style;
+  late Duration _hoverHideDelay;
+  late final AnimationController _fadeController;
+  late final Animation<double> _opacity;
 
   @override
   void initState() {
@@ -58,13 +65,38 @@ class _AcronymInlineState extends State<AcronymInline> {
           decorationThickness: widget.theme.decorationThickness,
           fontWeight: FontWeight.w600,
         );
+    _hoverHideDelay =
+        widget.theme.hoverHideDelay ?? widget.theme.hoverShowDelay;
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: widget.theme.tooltipFadeDuration,
+      value: 0,
+    );
+    _opacity = CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeOut,
+      reverseCurve: Curves.easeIn,
+    );
   }
 
   @override
   void dispose() {
-    _hide();
+    _hoverHideTimer?.cancel();
+    _hide(immediate: true, announce: false);
     _focusNode.dispose();
+    _fadeController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant AcronymInline oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _hoverHideDelay =
+        widget.theme.hoverHideDelay ?? widget.theme.hoverShowDelay;
+    if (oldWidget.theme.tooltipFadeDuration !=
+        widget.theme.tooltipFadeDuration) {
+      _fadeController.duration = widget.theme.tooltipFadeDuration;
+    }
   }
 
   void _toggle() {
@@ -78,6 +110,7 @@ class _AcronymInlineState extends State<AcronymInline> {
   void _show() {
     if (_tooltipVisible) return;
     final overlay = Overlay.of(context, rootOverlay: true);
+    _hoverHideTimer?.cancel();
 
     final renderBox = context.findRenderObject() as RenderBox?;
     final targetSize = renderBox?.size ?? Size.zero;
@@ -107,11 +140,14 @@ class _AcronymInlineState extends State<AcronymInline> {
               link: _link,
               showWhenUnlinked: false,
               offset: offset,
-              child: DashronymTooltipCard(
-                acronym: widget.acronym,
-                description: widget.description,
-                theme: widget.theme,
-                onClose: _hide,
+              child: FadeTransition(
+                opacity: _opacity,
+                child: DashronymTooltipCard(
+                  acronym: widget.acronym,
+                  description: widget.description,
+                  theme: widget.theme,
+                  onClose: () => _hide(),
+                ),
               ),
             ),
           ],
@@ -123,6 +159,7 @@ class _AcronymInlineState extends State<AcronymInline> {
     setState(() {
       _tooltipVisible = true;
     });
+    _fadeController.forward(from: 0);
 
     SemanticsService.announce(
       strings.announceTooltipShown(widget.acronym),
@@ -130,22 +167,55 @@ class _AcronymInlineState extends State<AcronymInline> {
     );
   }
 
-  void _hide() {
-    if (!_tooltipVisible) return;
-    _entry?.remove();
-    _entry = null;
-    setState(() {
-      _hovering = false;
+  void _hide({bool immediate = false, bool announce = true}) {
+    _hoverHideTimer?.cancel();
+    if (_entry == null) {
+      if (_tooltipVisible && mounted) {
+        setState(() {
+          _tooltipVisible = false;
+          _hovering = false;
+        });
+      } else {
+        _tooltipVisible = false;
+        _hovering = false;
+      }
+      return;
+    }
+
+    void completeRemoval() {
+      _entry?.remove();
+      _entry = null;
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _hovering = false;
+      });
+      if (announce) {
+        final strings = DashronymLocalizations.of(context);
+        SemanticsService.announce(
+          strings.announceTooltipHidden(widget.acronym),
+          Directionality.of(context),
+        );
+      }
+    }
+
+    if (mounted && _tooltipVisible) {
+      setState(() {
+        _tooltipVisible = false;
+      });
+    } else {
       _tooltipVisible = false;
-    });
+    }
 
-    if (!mounted) return;
+    if (immediate) {
+      _fadeController.stop();
+      _fadeController.value = 0;
+      completeRemoval();
+      return;
+    }
 
-    final strings = DashronymLocalizations.of(context);
-    SemanticsService.announce(
-      strings.announceTooltipHidden(widget.acronym),
-      Directionality.of(context),
-    );
+    _fadeController.reverse().whenComplete(completeRemoval);
   }
 
   @override
@@ -162,6 +232,7 @@ class _AcronymInlineState extends State<AcronymInline> {
           onEnter: widget.theme.enableHover
               ? (_) {
                   _hovering = true;
+                  _hoverHideTimer?.cancel();
                   Future.delayed(widget.theme.hoverShowDelay, () {
                     if (mounted && _hovering) _show();
                   });
@@ -170,20 +241,29 @@ class _AcronymInlineState extends State<AcronymInline> {
           onExit: widget.theme.enableHover
               ? (_) {
                   _hovering = false;
+                  _hoverHideTimer?.cancel();
+                  _hoverHideTimer = Timer(_hoverHideDelay, () {
+                    if (mounted && !_hovering && !_focusNode.hasFocus) {
+                      _hide();
+                    }
+                  });
                 }
               : null,
           cursor: SystemMouseCursors.click,
-          child: Tooltip(
-            message: strings.tooltipMessage(widget.acronym, widget.description),
-            preferBelow: false,
-            child: textWidget,
-          ),
+          child: textWidget,
         ),
       ),
     );
 
     result = FocusableActionDetector(
       focusNode: _focusNode,
+      onFocusChange: (focused) {
+        if (focused) {
+          _show();
+        } else {
+          _hide();
+        }
+      },
       shortcuts: const <ShortcutActivator, Intent>{
         SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
       },
