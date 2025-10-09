@@ -5,8 +5,8 @@ class DashronymConfig {
     this.minLen = 2,
     this.maxLen = 10,
     this.acceptMarkers = const ['()', "''", '""'],
-  })  : assert(minLen > 0, 'minLen must be greater than zero.'),
-        assert(maxLen >= minLen, 'maxLen must be >= minLen.');
+  }) : assert(minLen > 0, 'minLen must be greater than zero.'),
+       assert(maxLen >= minLen, 'maxLen must be >= minLen.');
 
   /// Whether this config matches bare ALL-CAPS acronyms in the registry.
   final bool enableBareAcronyms;

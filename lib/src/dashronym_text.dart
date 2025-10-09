@@ -99,11 +99,13 @@ class DashronymText extends StatelessWidget {
       resolvedStyle = providedStyle;
     }
     if (MediaQuery.boldTextOf(context)) {
-      resolvedStyle =
-          resolvedStyle.merge(const TextStyle(fontWeight: FontWeight.bold));
+      resolvedStyle = resolvedStyle.merge(
+        const TextStyle(fontWeight: FontWeight.bold),
+      );
     }
 
-    final effectiveTextAlign = textAlign ?? defaultTextStyle.textAlign ?? TextAlign.start;
+    final effectiveTextAlign =
+        textAlign ?? defaultTextStyle.textAlign ?? TextAlign.start;
     final effectiveSoftWrap = softWrap ?? defaultTextStyle.softWrap;
     final effectiveMaxLines = maxLines ?? defaultTextStyle.maxLines;
     final effectiveOverflow =

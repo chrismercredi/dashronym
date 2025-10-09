@@ -5,8 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('dashronyms extension swaps markers for widget spans',
-      (tester) async {
+  testWidgets('dashronyms extension swaps markers for widget spans', (
+    tester,
+  ) async {
     final registry = AcronymRegistry({
       'SDK': 'Software Development Kit',
       'API': 'Application Programming Interface',
@@ -24,11 +25,7 @@ void main() {
       'This (SDK) exposes a stable (API).',
     ).dashronyms(registry: registry);
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(body: widget),
-      ),
-    );
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: widget)));
 
     expect(find.byType(AcronymInline), findsNWidgets(2));
   });

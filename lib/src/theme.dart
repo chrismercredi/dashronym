@@ -12,8 +12,8 @@ class DashronymTheme {
     this.cardPadding = const EdgeInsets.all(8),
     this.hoverShowDelay = const Duration(milliseconds: 250),
     this.enableHover = true,
-  })  : assert(cardWidth > 0, 'cardWidth must be positive.'),
-        assert(cardElevation >= 0, 'cardElevation cannot be negative.');
+  }) : assert(cardWidth > 0, 'cardWidth must be positive.'),
+       assert(cardElevation >= 0, 'cardElevation cannot be negative.');
 
   /// Whether this theme underlines matched acronyms.
   final bool underline;

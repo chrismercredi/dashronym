@@ -33,10 +33,12 @@ class _AcronymInlineState extends State<AcronymInline> {
   void initState() {
     super.initState();
     final base = widget.textStyle ?? const TextStyle();
-    _style = widget.theme.acronymStyle ??
+    _style =
+        widget.theme.acronymStyle ??
         base.copyWith(
-          decoration:
-              widget.theme.underline ? TextDecoration.underline : TextDecoration.none,
+          decoration: widget.theme.underline
+              ? TextDecoration.underline
+              : TextDecoration.none,
           decorationStyle: widget.theme.decorationStyle,
           decorationThickness: widget.theme.decorationThickness,
           fontWeight: FontWeight.w600,
