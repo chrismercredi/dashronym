@@ -1,5 +1,4 @@
 import 'package:dashronym/dashronym.dart';
-import 'package:dashronym/src/tooltip_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -18,13 +17,12 @@ Widget _testHarness(Widget child) {
   );
 }
 
-DashronymTheme _theme() => const DashronymTheme(
-      enableHover: false,
-    );
+DashronymTheme _theme() => const DashronymTheme(enableHover: false);
 
 void main() {
-  testWidgets('AcronymInline toggles tooltip on tap and escape',
-      (tester) async {
+  testWidgets('AcronymInline toggles tooltip on tap and escape', (
+    tester,
+  ) async {
     final semantics = tester.ensureSemantics();
 
     await tester.pumpWidget(
