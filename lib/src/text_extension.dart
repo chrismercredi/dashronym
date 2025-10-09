@@ -9,6 +9,10 @@ import 'theme.dart';
 extension DashronymsTextX on Text {
   /// Returns a [RichText] that replaces matched acronyms with interactive
   /// glossary tooltips.
+  ///
+  /// Parses [data] (or [textSpan] when present) using the supplied [registry]
+  /// and formatting preferences so screen readers and pointer users can reveal
+  /// inline definitions without leaving the flow of text.
   Widget dashronyms({
     required AcronymRegistry registry,
     DashronymConfig config = const DashronymConfig(),
@@ -20,7 +24,6 @@ extension DashronymsTextX on Text {
     Locale? locale,
     bool? softWrap,
     TextOverflow? overflow,
-    double? textScaleFactor,
     int? maxLines,
     String? semanticsLabel,
     TextWidthBasis? textWidthBasis,
@@ -28,11 +31,6 @@ extension DashronymsTextX on Text {
     TextScaler? textScaler,
     Color? selectionColor,
   }) {
-    assert(
-      textScaler == null || textScaleFactor == null,
-      'textScaleFactor is deprecated and cannot be specified when textScaler is specified.',
-    );
-
     // If this [Text] was created with [Text.rich], preserve it as-is.
     if (data == null) {
       return Text.rich(

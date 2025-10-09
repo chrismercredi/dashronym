@@ -1,8 +1,9 @@
 import 'dart:collection';
 
-/// Registry of acronyms and their descriptions.
+/// A registry of acronyms and their descriptions.
 ///
-/// Stores canonical (usually uppercased) keys for robust matching.
+/// Stores canonical (usually uppercased) keys for robust matching against
+/// incoming text parsed by dashronym.
 class AcronymRegistry {
   AcronymRegistry(Map<String, String> entries, {this.caseInsensitive = true}) {
     if (caseInsensitive) {

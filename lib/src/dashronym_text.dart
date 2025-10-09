@@ -6,6 +6,10 @@ import 'registry.dart';
 import 'theme.dart';
 
 /// A widget that renders a string with dashronym tooltips applied.
+///
+/// Parses [text] for registry matches, replacing acronyms with interactive
+/// [WidgetSpan] tooltips while preserving the surrounding [TextStyle] and
+/// layout options.
 class DashronymText extends StatelessWidget {
   const DashronymText(
     this.text, {
@@ -20,7 +24,6 @@ class DashronymText extends StatelessWidget {
     this.locale,
     this.softWrap,
     this.overflow,
-    this.textScaleFactor,
     this.textScaler,
     this.maxLines,
     this.semanticsLabel,
@@ -62,9 +65,6 @@ class DashronymText extends StatelessWidget {
   /// The overflow behaviour at the edge of the layout box.
   final TextOverflow? overflow;
 
-  /// The linear text scaling factor (deprecated in Flutter but still surfaced).
-  final double? textScaleFactor;
-
   /// The modern text scaling configuration.
   final TextScaler? textScaler;
 
@@ -85,11 +85,6 @@ class DashronymText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    assert(
-      textScaler == null || textScaleFactor == null,
-      'textScaleFactor is deprecated and cannot be specified when textScaler is specified.',
-    );
-
     final defaultTextStyle = DefaultTextStyle.of(context);
     final providedStyle = style;
     TextStyle resolvedStyle;
@@ -117,11 +112,7 @@ class DashronymText extends StatelessWidget {
         defaultTextStyle.textHeightBehavior ??
         DefaultTextHeightBehavior.maybeOf(context);
 
-    final effectiveTextScaler = switch ((textScaler, textScaleFactor)) {
-      (final TextScaler scaler, _) => scaler,
-      (null, final double scale) => TextScaler.linear(scale),
-      (null, null) => MediaQuery.textScalerOf(context),
-    };
+    final effectiveTextScaler = textScaler ?? MediaQuery.textScalerOf(context);
 
     final spans = DashronymParser(
       registry: registry,

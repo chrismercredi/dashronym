@@ -1,4 +1,7 @@
-/// Parsing/matching configuration for dashronyms.
+/// Parsing and matching configuration for dashronyms.
+///
+/// Controls which acronyms are considered matches, which marker pairs are
+/// honored, and how bare uppercase words are interpreted.
 class DashronymConfig {
   const DashronymConfig({
     this.enableBareAcronyms = false,

@@ -1,5 +1,6 @@
 import 'package:dashronym/dashronym.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() => runApp(const DemoApp());
 
@@ -28,6 +29,13 @@ class DemoApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(colorSchemeSeed: Colors.indigo, useMaterial3: true),
+      localizationsDelegates: const [
+        DashronymLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: DashronymLocalizations.supportedLocales,
       home: Scaffold(
         appBar: AppBar(title: const Text('dashronym demo')),
         body: ListView(
@@ -97,6 +105,48 @@ class DemoApp extends StatelessWidget {
                 underline: true,
                 decorationThickness: 1.5,
               ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Accessibility & customization',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Dashronym handles semantics and localization automatically. Examine the trigger below with a screen reader or keyboard: it announces the acronym, exposes a tooltip hint, and the close button is discoverable via semantics.',
+            ),
+            const SizedBox(height: 12),
+            const Text('Toggle the localized (UI) tooltip.').dashronyms(
+              registry: registry,
+              config: config,
+              theme: const DashronymTheme(
+                enableHover: false,
+                cardWidth: 260,
+                cardElevation: 12,
+                cardIcon: Icons.lightbulb_outline,
+                cardCloseIcon: Icons.highlight_off,
+                cardIconColor: Colors.amber,
+                cardTitleStyle: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+                cardSubtitleStyle: TextStyle(fontSize: 15),
+                tooltipOffset: Offset(16, 12),
+              ),
+            ),
+            const SizedBox(height: 12),
+            DashronymText(
+              'Try long-press on touch devices to dismiss the overlay, or activate the close button labeled by dashronym localizations.',
+              registry: registry,
+              config: config,
+              theme: const DashronymTheme(
+                underline: true,
+                decorationStyle: TextDecorationStyle.dashed,
+                cardWidth: 300,
+                cardPadding: EdgeInsets.all(12),
+                hoverShowDelay: Duration(milliseconds: 300),
+              ),
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
         ),
