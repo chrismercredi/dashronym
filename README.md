@@ -57,4 +57,4 @@ Take a look at the `/example` app for a longer, article-style demonstration that
 
 ## Contributing
 
-Contributions, issues, and feature requests are welcome! Please open an issue on the [GitHub tracker](https://github.com/christophermercredi/dashronym/issues).
+Contributions, issues, and feature requests are welcome! Please open an issue on the [GitHub tracker](https://github.com/chrismercredi/dashronym/issues).
