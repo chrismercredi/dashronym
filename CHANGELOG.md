@@ -1,3 +1,10 @@
+## 0.0.4
+
+- Added configurable hover hide delay and tooltip fade duration to `DashronymTheme`.
+- Introduced animated tooltip dismissal with fade transitions and deferred hover hide timers.
+- Improved focus handling to auto-show tooltips and prevent lingering overlays when unmounted.
+- Excluded tests from static analysis to speed up local iteration and updated theme tests for new fields.
+
 ## 0.0.3
 
 - Refactored inline tooltip widgets for richer semantics and accessibility.

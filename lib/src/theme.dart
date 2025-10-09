@@ -14,6 +14,8 @@ class DashronymTheme {
     this.cardElevation = 8,
     this.cardPadding = const EdgeInsets.all(8),
     this.hoverShowDelay = const Duration(milliseconds: 250),
+    this.hoverHideDelay,
+    this.tooltipFadeDuration = const Duration(milliseconds: 150),
     this.enableHover = true,
     this.cardBorderRadius = 12,
     this.cardIcon = Icons.info_outline,
@@ -53,6 +55,14 @@ class DashronymTheme {
 
   /// The delay before showing the card on hover.
   final Duration hoverShowDelay;
+
+  /// The delay before hiding the card once the pointer leaves the trigger.
+  ///
+  /// Defaults to [hoverShowDelay] when null.
+  final Duration? hoverHideDelay;
+
+  /// The duration used when animating the tooltip card's opacity.
+  final Duration tooltipFadeDuration;
 
   /// Whether this theme enables hover-triggered cards on desktop platforms.
   final bool enableHover;
