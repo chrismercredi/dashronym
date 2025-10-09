@@ -43,10 +43,7 @@ class DemoApp extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyLarge,
             ),
             const SizedBox(height: 24),
-            Text(
-              'Abstract',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text('Abstract', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(
               'This brief article demonstrates how the dashronym plugin embeds interactive glossary entries directly in Flutter copy. '
@@ -58,33 +55,21 @@ class DemoApp extends StatelessWidget {
               theme: accentTheme,
             ),
             const SizedBox(height: 24),
-            Text(
-              'Method',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text('Method', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(
               'Authors draft prose as ordinary Flutter `Text` widgets, then call `.dashronyms()` to transform matching tokens into actionable overlays. '
               'dashronym parses for marked forms like (FFI) as well as bare ALL-CAPS phrases, injecting `WidgetSpan` entries that open rich cards describing each acronym.',
               style: Theme.of(context).textTheme.bodyMedium,
-            ).dashronyms(
-              registry: registry,
-              config: config,
-            ),
+            ).dashronyms(registry: registry, config: config),
             const SizedBox(height: 24),
-            Text(
-              'Discussion',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text('Discussion', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(
               'Because dashronym cooperates with existing (UI) theming, documentation teams can mirror house styles or emphasize glossary triggers with custom underline treatments. '
               'Tooling such as project (CLI)s and (IDE) previews benefit as well, since the generated spans remain standard Flutter widgets.',
               style: Theme.of(context).textTheme.bodyMedium,
-            ).dashronyms(
-              registry: registry,
-              config: config,
-            ),
+            ).dashronyms(registry: registry, config: config),
             const SizedBox(height: 24),
             Text(
               'Explicit widget',
@@ -96,17 +81,11 @@ class DemoApp extends StatelessWidget {
               'This is useful for reusable molecules inside component libraries or onboarding flows that explore topics like (LSP) support, (AOT) builds, and advanced (SDK) distribution strategies.',
               registry: registry,
               config: config,
-              theme: const DashronymTheme(
-                underline: false,
-                cardWidth: 220,
-              ),
+              theme: const DashronymTheme(underline: false, cardWidth: 220),
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 24),
-            Text(
-              'Conclusion',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text('Conclusion', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(
               'dashronym keeps Flutter documentation concise without sacrificing clarity. Pair it with your favorite (IDE) or static site generator, and every reader gains glossary grade insight at the exact point of need.',
