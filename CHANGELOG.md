@@ -1,3 +1,9 @@
+## 0.0.5
+
+- Expanded dartdoc coverage across public APIs, including constructors and library documentation.
+- Clarified usage examples for `DashronymText`, `Text.dashronyms`, and configuration helpers.
+- Ran `dart format` on source and tests to keep style aligned with Flutter guidelines.
+
 ## 0.0.4
 
 - Added configurable hover hide delay and tooltip fade duration to `DashronymTheme`.
