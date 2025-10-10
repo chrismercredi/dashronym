@@ -1,3 +1,9 @@
+## 0.0.6
+
+- Clamp inline tooltip overlays so they stay within the visible viewport on mobile, desktop, and when the window resizes.
+- Made tooltip positioning responsive to safe areas, keyboard insets, and RTL layouts, and prevented teardown setState calls.
+- Added regression test coverage for the viewport-clamping behavior.
+
 ## 0.0.5
 
 - Expanded dartdoc coverage across public APIs, including constructors and library documentation.
