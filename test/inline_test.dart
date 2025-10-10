@@ -58,4 +58,45 @@ void main() {
 
     semantics.dispose();
   });
+
+  testWidgets('Tooltip repositions to remain within the viewport', (
+    tester,
+  ) async {
+    final binding = tester.binding;
+    final originalLogicalSize =
+        binding.window.physicalSize / binding.window.devicePixelRatio;
+
+    await binding.setSurfaceSize(const Size(220, 320));
+    addTearDown(() async {
+      await binding.setSurfaceSize(originalLogicalSize);
+    });
+
+    await tester.pumpWidget(
+      _testHarness(
+        AcronymInline(
+          acronym: 'CLI',
+          description: 'Command Line Interface',
+          theme: _theme(),
+          textStyle: const TextStyle(),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('CLI'));
+    await tester.pumpAndSettle();
+
+    final cardFinder = find.byType(DashronymTooltipCard);
+    expect(cardFinder, findsOneWidget);
+
+    final screenSize =
+        binding.window.physicalSize / binding.window.devicePixelRatio;
+    final topLeft = tester.getTopLeft(cardFinder);
+    final topRight = tester.getTopRight(cardFinder);
+    final bottomLeft = tester.getBottomLeft(cardFinder);
+
+    expect(topLeft.dx, greaterThanOrEqualTo(0));
+    expect(topRight.dx, lessThanOrEqualTo(screenSize.width));
+    expect(topLeft.dy, greaterThanOrEqualTo(0));
+    expect(bottomLeft.dy, lessThanOrEqualTo(screenSize.height));
+  });
 }
