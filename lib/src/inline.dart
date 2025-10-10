@@ -104,6 +104,7 @@ class _AcronymInlineState extends State<AcronymInline>
   bool _isDisposing = false;
 
   static const double _viewportMargin = 8.0;
+  static const double _offsetEpsilon = 0.5;
 
   @override
   void initState() {
@@ -186,7 +187,7 @@ class _AcronymInlineState extends State<AcronymInline>
   }
 
   void _setFollowerOffset(Offset next) {
-    if ((_followerOffset - next).distance < 0.5) return;
+    if ((_followerOffset - next).distance < _offsetEpsilon) return;
     _followerOffset = next;
     if (_isDisposing) return;
     _entry?.markNeedsBuild();
@@ -321,19 +322,16 @@ class _AcronymInlineState extends State<AcronymInline>
     if (!_tooltipVisible) return;
 
     final overlay = Overlay.of(context, rootOverlay: true);
-    if (overlay == null) {
-      return;
-    }
-    final overlayBox = overlay.context.findRenderObject() as RenderBox?;
-    final targetBox = context.findRenderObject() as RenderBox?;
+    final overlayRenderObject = overlay.context.findRenderObject();
+    final targetRenderObject = context.findRenderObject();
     final tooltipContext = _tooltipKey.currentContext;
-    final tooltipBox = tooltipContext?.findRenderObject() as RenderBox?;
+    final tooltipRenderObject = tooltipContext?.findRenderObject();
 
-    if (overlayBox == null || targetBox == null) {
+    if (overlayRenderObject is! RenderBox || targetRenderObject is! RenderBox) {
       return;
     }
 
-    if (tooltipBox == null) {
+    if (tooltipRenderObject is! RenderBox) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _tooltipVisible) {
           _updateTooltipPosition();
@@ -341,6 +339,10 @@ class _AcronymInlineState extends State<AcronymInline>
       });
       return;
     }
+
+    final overlayBox = overlayRenderObject;
+    final targetBox = targetRenderObject;
+    final tooltipBox = tooltipRenderObject;
 
     final overlaySize = overlayBox.size;
     final anchorTopLeft = targetBox.localToGlobal(
@@ -361,7 +363,8 @@ class _AcronymInlineState extends State<AcronymInline>
 
     final availableWidth = overlaySize.width - padding.left - padding.right;
     double horizontalMargin = _viewportMargin;
-    if (cardSize.width + horizontalMargin * 2 > availableWidth) {
+    final double horizontalMarginTotal = horizontalMargin * 2;
+    if (cardSize.width + horizontalMarginTotal > availableWidth) {
       horizontalMargin = math.max(0.0, (availableWidth - cardSize.width) / 2.0);
     }
 
@@ -372,7 +375,8 @@ class _AcronymInlineState extends State<AcronymInline>
     final availableHeight =
         overlaySize.height - padding.top - padding.bottom - keyboardInset;
     double verticalMargin = _viewportMargin;
-    if (cardSize.height + verticalMargin * 2 > availableHeight) {
+    final double verticalMarginTotal = verticalMargin * 2;
+    if (cardSize.height + verticalMarginTotal > availableHeight) {
       verticalMargin = math.max(0.0, (availableHeight - cardSize.height) / 2.0);
     }
 
