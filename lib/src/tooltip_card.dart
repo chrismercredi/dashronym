@@ -3,11 +3,26 @@ import 'package:flutter/material.dart';
 import 'localizations.dart';
 import 'theme.dart';
 
-/// A tooltip card that surfaces an acronym's description.
+/// A compact, accessible tooltip card displaying an acronym and its description.
 ///
-/// Builds a themed [ListTile] with localized semantics and a close button that
-/// dismisses the overlay when activated.
+/// Renders a themed [ListTile] inside a [Material] surface with a close button.
+/// Semantics are localized via [DashronymLocalizations] and exposed as a live
+/// region so screen readers announce updates when the tooltip appears.
+///
+/// Typical usage (shown by an overlay controller, e.g., [AcronymInline]):
+/// ```dart
+/// DashronymTooltipCard(
+///   acronym: 'SDK',
+///   description: 'Software Development Kit',
+///   theme: const DashronymTheme(),
+///   onClose: () => overlayEntry.remove(),
+/// )
+/// ```
 class DashronymTooltipCard extends StatelessWidget {
+  /// Creates a tooltip card describing [acronym] with the given [description].
+  ///
+  /// Visuals and layout come from [theme]. The [onClose] callback is invoked
+  /// when the trailing close button is activated.
   const DashronymTooltipCard({
     super.key,
     required this.acronym,
@@ -16,22 +31,23 @@ class DashronymTooltipCard extends StatelessWidget {
     required this.onClose,
   });
 
-  /// The acronym being described.
+  /// The acronym being described (e.g., `"API"`).
   final String acronym;
 
-  /// The human-readable description of the acronym.
+  /// The human-readable description shown under the title.
   final String description;
 
-  /// Theme data used to style the tooltip.
+  /// Style, layout, and iconography for the card.
   final DashronymTheme theme;
 
-  /// Invoked when the close button is triggered.
+  /// Called when the close button is pressed.
   final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) {
     final strings = DashronymLocalizations.of(context);
 
+    // Resolve colors and text styles from theme or ambient ThemeData.
     final iconColor =
         theme.cardIconColor ?? Theme.of(context).colorScheme.primary;
     final titleStyle =

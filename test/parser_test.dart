@@ -3,18 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 DashronymParser _parser() => DashronymParser(
-      registry: AcronymRegistry({'SDK': 'Software Development Kit'}),
-      config: const DashronymConfig(enableBareAcronyms: true),
-      theme: const DashronymTheme(),
-      baseStyle: const TextStyle(),
-    );
+  registry: AcronymRegistry({'SDK': 'Software Development Kit'}),
+  config: const DashronymConfig(enableBareAcronyms: true),
+  theme: const DashronymTheme(),
+  baseStyle: const TextStyle(),
+);
 
 void main() {
   test('DashronymParser converts acronyms into widget spans', () {
     final spans = _parser().parseToSpans('Using (SDK) daily.');
 
-    final widgetSpans =
-        spans.whereType<WidgetSpan>().toList(growable: false);
+    final widgetSpans = spans.whereType<WidgetSpan>().toList(growable: false);
     expect(widgetSpans, hasLength(1));
     expect(
       spans.map((span) => span.runtimeType),

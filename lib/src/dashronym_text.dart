@@ -5,12 +5,35 @@ import 'parser.dart';
 import 'registry.dart';
 import 'theme.dart';
 
-/// A widget that renders a string with dashronym tooltips applied.
+/// Renders text with inline, accessible glossary tooltips for matched acronyms.
 ///
-/// Parses [text] for registry matches, replacing acronyms with interactive
-/// [WidgetSpan] tooltips while preserving the surrounding [TextStyle] and
-/// layout options.
+/// This widget scans [text] using the provided [AcronymRegistry] and replaces
+/// matches with interactive [WidgetSpan]s (see `AcronymInline`) while
+/// preserving your typography, layout, and semantics. Non-matching text is
+/// emitted as regular [TextSpan]s. The result is painted by a [RichText]
+/// configured from the surrounding [DefaultTextStyle] and the provided
+/// constructor parameters.
+///
+/// Example:
+/// ```dart
+/// final registry = AcronymRegistry({
+///   'SDK': 'Software Development Kit',
+///   'API': 'Application Programming Interface',
+/// });
+///
+/// const theme = DashronymTheme(underline: true);
+///
+/// const text = 'Install the SDK to use the API.';
+///
+/// DashronymText(
+///   text,
+///   registry: registry,
+///   theme: theme,
+///   style: TextStyle(fontSize: 14),
+/// )
+/// ```
 class DashronymText extends StatelessWidget {
+  /// Creates a text widget that decorates matched acronyms with glossary tooltips.
   const DashronymText(
     this.text, {
     super.key,
@@ -32,61 +55,69 @@ class DashronymText extends StatelessWidget {
     this.selectionColor,
   });
 
-  /// The plain text this widget renders.
+  /// The plain text to render and scan for acronyms.
   final String text;
 
-  /// The acronym definitions this widget looks up.
+  /// Acronym definitions used to resolve matches found in [text].
   final AcronymRegistry registry;
 
-  /// The parser configuration applied when scanning [text].
+  /// Parser options such as markers, min/max lengths, and bare acronym support.
   final DashronymConfig config;
 
-  /// The visual customization for tooltip and inline styling.
+  /// Visual customization for the inline trigger and the tooltip card.
   final DashronymTheme theme;
 
-  /// The base text style applied to the rendered spans.
+  /// Base text style for the output spans.
+  ///
+  /// If `null` or if [TextStyle.inherit] is `true`, this is merged with
+  /// [DefaultTextStyle.of] to produce the effective style.
   final TextStyle? style;
 
-  /// The strut configuration forwarded to [RichText].
+  /// Strut configuration forwarded to the underlying [RichText].
   final StrutStyle? strutStyle;
 
-  /// The horizontal alignment for the rendered text.
+  /// Horizontal alignment for the rendered text.
   final TextAlign? textAlign;
 
-  /// The explicit text direction override.
+  /// Explicit text direction override (otherwise inherited).
   final TextDirection? textDirection;
 
-  /// The locale used to select fonts.
+  /// Locale used to select fonts.
   final Locale? locale;
 
-  /// Whether this text should soft wrap.
+  /// Whether the text should soft-wrap at line breaks.
   final bool? softWrap;
 
-  /// The overflow behaviour at the edge of the layout box.
+  /// Overflow behavior at the layout boundary.
   final TextOverflow? overflow;
 
-  /// The modern text scaling configuration.
+  /// Modern text scaling configuration.
   final TextScaler? textScaler;
 
-  /// The maximum number of lines to display.
+  /// Maximum number of lines to display.
   final int? maxLines;
 
-  /// The semantics label read by accessibility services.
+  /// Optional semantics label read by accessibility services.
+  ///
+  /// When provided, the visual [RichText] is excluded from semantics and this
+  /// label is exposed instead.
   final String? semanticsLabel;
 
-  /// The basis used to calculate text width.
+  /// Basis for computing text width.
   final TextWidthBasis? textWidthBasis;
 
-  /// The text height behaviour override.
+  /// Text height behavior override.
   final TextHeightBehavior? textHeightBehavior;
 
-  /// The selection highlight colour.
+  /// Selection highlight color.
   final Color? selectionColor;
 
   @override
   Widget build(BuildContext context) {
     final defaultTextStyle = DefaultTextStyle.of(context);
     final providedStyle = style;
+
+    // Derive effective style by merging with the inherited default.
     TextStyle resolvedStyle;
     if (providedStyle == null || providedStyle.inherit) {
       resolvedStyle = defaultTextStyle.style.merge(providedStyle);
@@ -99,6 +130,7 @@ class DashronymText extends StatelessWidget {
       );
     }
 
+    // Resolve layout defaults from the ambient DefaultTextStyle.
     final effectiveTextAlign =
         textAlign ?? defaultTextStyle.textAlign ?? TextAlign.start;
     final effectiveSoftWrap = softWrap ?? defaultTextStyle.softWrap;
@@ -111,9 +143,9 @@ class DashronymText extends StatelessWidget {
         textHeightBehavior ??
         defaultTextStyle.textHeightBehavior ??
         DefaultTextHeightBehavior.maybeOf(context);
-
     final effectiveTextScaler = textScaler ?? MediaQuery.textScalerOf(context);
 
+    // Parse the text into spans with inline tooltip widgets.
     final spans = DashronymParser(
       registry: registry,
       config: config,
@@ -136,6 +168,7 @@ class DashronymText extends StatelessWidget {
       text: TextSpan(style: resolvedStyle, children: spans),
     );
 
+    // If a semantics label is provided, expose it and hide the visual tree.
     if (semanticsLabel != null) {
       result = Semantics(
         label: semanticsLabel,

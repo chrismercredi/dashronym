@@ -18,13 +18,7 @@ void main() {
       strings.semanticsHintHide('SDK'),
       'Double tap to hide definition for SDK.',
     );
-    expect(
-      strings.announceTooltipShown('SDK'),
-      'Showing definition for SDK.',
-    );
-    expect(
-      strings.closeButtonTooltip('SDK'),
-      'Hide definition for SDK',
-    );
+    expect(strings.announceTooltipShown('SDK'), 'Showing definition for SDK.');
+    expect(strings.closeButtonTooltip('SDK'), 'Hide definition for SDK');
   });
 }

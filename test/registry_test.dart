@@ -11,10 +11,9 @@ void main() {
   });
 
   test('AcronymRegistry respects case sensitivity when disabled', () {
-    final registry = AcronymRegistry(
-      {'API': 'Application Programming Interface'},
-      caseInsensitive: false,
-    );
+    final registry = AcronymRegistry({
+      'API': 'Application Programming Interface',
+    }, caseInsensitive: false);
 
     expect(registry.contains('API'), isTrue);
     expect(registry.contains('api'), isFalse);

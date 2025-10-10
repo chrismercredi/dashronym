@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('DashronymText renders widget spans with provided text scaler',
-      (tester) async {
+  testWidgets('DashronymText renders widget spans with provided text scaler', (
+    tester,
+  ) async {
     final widget = DashronymText(
       'Our (SDK) is stable.',
       registry: AcronymRegistry({'SDK': 'Software Development Kit'}),
