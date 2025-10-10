@@ -8,11 +8,55 @@ import 'localizations.dart';
 import 'theme.dart';
 import 'tooltip_card.dart';
 
-/// Inline acronym widget used inside a [WidgetSpan].
+/// An inline, tappable acronym that shows an accessible tooltip card.
 ///
-/// Opens a Material overlay that looks like a small [ListTile] card and
-/// supports keyboard, screen reader, and pointer interactions.
+/// When activated (tap/Enter/Space) or focused/hovered (if enabled), this
+/// widget opens a Material overlay positioned near the inline text. The overlay
+/// renders a small card (see [DashronymTooltipCard]) with the acronym and its
+/// full [description]. It supports keyboard, screen reader, and pointer
+/// interactions:
+///
+/// * Tap/click or activate (Enter/Space) to toggle the tooltip.
+/// * Press Escape to dismiss.
+/// * Hover show/hide is supported when [DashronymTheme.enableHover] is `true`.
+/// * Screen readers receive announcements when the tooltip is shown/hidden.
+///
+/// The trigger text inherits [textStyle] and can be customized by
+/// [DashronymTheme] (e.g., underline, thickness, fade durations, offsets).
+///
+/// Typical usage inside a `WidgetSpan`:
+/// ```dart
+/// Text.rich(
+///   TextSpan(
+///     children: [
+///       const TextSpan(text: 'We use the '),
+///       WidgetSpan(
+///         alignment: PlaceholderAlignment.baseline,
+///         baseline: TextBaseline.alphabetic,
+///         child: AcronymInline(
+///           acronym: 'SDK',
+///           description: 'Software Development Kit',
+///           theme: DashronymTheme.fallback(),
+///           textStyle: DefaultTextStyle.of(context).style,
+///         ),
+///       ),
+///       const TextSpan(text: ' for plugins.'),
+///     ],
+///   ),
+/// )
+/// ```
+///
+/// Semantics:
+/// This widget exposes a button role with a dynamic hint (show/hide) and, when
+/// open, sets [Semantics.value] to the [description]. It also uses
+/// [SemanticsService.announce] for polite announcements.
+///
+/// Layout/overlay:
+/// Uses a [CompositedTransformTarget]/[CompositedTransformFollower] pair to
+/// position the tooltip relative to the inline text and flips horizontal
+/// offseting for RTL via [TextDirection].
 class AcronymInline extends StatefulWidget {
+  /// Creates an inline acronym control that shows a tooltip when activated.
   const AcronymInline({
     super.key,
     required this.acronym,
@@ -21,16 +65,20 @@ class AcronymInline extends StatefulWidget {
     required this.textStyle,
   });
 
-  /// The acronym presented inline.
+  /// The acronym text shown inline (e.g., `"SDK"`).
   final String acronym;
 
-  /// The description rendered inside the tooltip card.
+  /// The descriptive text rendered inside the tooltip card.
   final String description;
 
-  /// Visual customization for the trigger and tooltip.
+  /// Visual and interaction parameters for the trigger and tooltip.
+  ///
+  /// See [DashronymTheme] for underline, decoration, timing, and offset options.
   final DashronymTheme theme;
 
-  /// Text style inherited from the surrounding span.
+  /// Base text style inherited from the surrounding span.
+  ///
+  /// The trigger style is derived from this plus any overrides in [theme].
   final TextStyle? textStyle;
 
   @override

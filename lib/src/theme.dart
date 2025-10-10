@@ -2,9 +2,26 @@ import 'package:flutter/material.dart';
 
 /// Visual customization for inline acronym triggers and their tooltip cards.
 ///
-/// Configure underline treatment, card styling, pointer/keyboard behavior,
-/// and tooltip positioning by supplying a tailored instance to dashronym APIs.
+/// Supply an instance to dashronym APIs (e.g., the inline acronym widget or
+/// text extension) to control underline behavior, hover timing, tooltip
+/// animation, card geometry, and iconography.
+///
+/// Example:
+/// ```dart
+/// const theme = DashronymTheme(
+///   underline: true,
+///   decorationStyle: TextDecorationStyle.dotted,
+///   tooltipFadeDuration: Duration(milliseconds: 200),
+///   cardWidth: 300,
+///   cardBorderRadius: 10,
+///   cardIcon: Icons.info_outline,
+///   tooltipOffset: Offset(0, 8),
+/// );
+/// ```
 class DashronymTheme {
+  /// Creates a theme describing trigger styling and tooltip card presentation.
+  ///
+  /// Asserts that [cardWidth] is positive and [cardElevation] is non-negative.
   const DashronymTheme({
     this.underline = true,
     this.decorationStyle = TextDecorationStyle.dotted,
@@ -32,65 +49,65 @@ class DashronymTheme {
   }) : assert(cardWidth > 0, 'cardWidth must be positive.'),
        assert(cardElevation >= 0, 'cardElevation cannot be negative.');
 
-  /// Whether this theme underlines matched acronyms.
+  /// Whether matched acronyms are underlined in the inline trigger.
   final bool underline;
 
-  /// The decoration style applied when [underline] is true.
+  /// The [TextDecorationStyle] used when [underline] is `true`.
   final TextDecorationStyle decorationStyle;
 
-  /// The explicit underline thickness, or null to defer to the text style.
+  /// The underline thickness; when `null`, the base text style decides.
   final double? decorationThickness;
 
-  /// The style override used for acronym text.
+  /// Style override for the inline acronym text (e.g., weight or color).
   final TextStyle? acronymStyle;
 
-  /// The maximum width this tooltip card uses.
+  /// Maximum width of the tooltip card in logical pixels.
   final double cardWidth;
 
-  /// The Material elevation of the tooltip card.
+  /// Material elevation of the tooltip card.
   final double cardElevation;
 
-  /// The padding applied inside the tooltip card.
+  /// Inner padding for the tooltip card's content area.
   final EdgeInsets cardPadding;
 
-  /// The delay before showing the card on hover.
+  /// Delay before showing the tooltip when the pointer hovers the trigger.
   final Duration hoverShowDelay;
 
-  /// The delay before hiding the card once the pointer leaves the trigger.
+  /// Delay before hiding after the pointer leaves the trigger.
   ///
-  /// Defaults to [hoverShowDelay] when null.
+  /// If `null`, defaults to [hoverShowDelay].
   final Duration? hoverHideDelay;
 
-  /// The duration used when animating the tooltip card's opacity.
+  /// Duration of the tooltip's fade in/out animation.
   final Duration tooltipFadeDuration;
 
-  /// Whether this theme enables hover-triggered cards on desktop platforms.
+  /// Enables hover-triggered behavior on desktop/web when `true`.
   final bool enableHover;
 
-  /// The border radius used for the tooltip card.
+  /// Corner radius for the tooltip card's rounded rectangle.
   final double cardBorderRadius;
 
-  /// The leading icon shown inside the tooltip.
+  /// Leading icon displayed inside the tooltip card.
   final IconData cardIcon;
 
-  /// The trailing icon used for the close button.
+  /// Trailing close icon used by the tooltip's dismiss button.
   final IconData cardCloseIcon;
 
-  /// The color applied to icons inside the tooltip card.
+  /// Color applied to icons inside the tooltip card; falls back to theme.
   final Color? cardIconColor;
 
-  /// The text style used for the acronym title.
+  /// Text style for the acronym title in the card.
   final TextStyle? cardTitleStyle;
 
-  /// The text style used for the description subtitle.
+  /// Text style for the description subtitle in the card.
   final TextStyle? cardSubtitleStyle;
 
-  /// Additional padding applied to the [ListTile] content.
+  /// Extra padding applied to the [ListTile] content within the card.
   final EdgeInsets cardContentPadding;
 
-  /// Minimum width reserved for the leading widget.
+  /// Minimum width reserved for the card's leading widget.
   final double cardMinLeadingWidth;
 
-  /// Offset applied to the tooltip relative to the trigger.
+  /// Offset of the tooltip relative to the inline trigger's origin.
   final Offset tooltipOffset;
 }

@@ -9,6 +9,7 @@ dashronym creates inline glossary cards for acronyms that appear inside your Flu
 - Configurable matching (`DashronymConfig`) with optional bare acronym detection.
 - Theme controls (`DashronymTheme`) for underline styles, hover behaviour, hide delays, and card layout with fade animations.
 - Lightweight LRU caching to avoid reparsing unchanged strings.
+- Comprehensive DartDoc coverage so IDE tooltips describe every public helper.
 
 ## Installation
 
@@ -16,7 +17,7 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dashronym: ^0.0.4
+  dashronym: ^0.0.5
 ```
 
 Run `flutter pub get` to pull in the dependency.
