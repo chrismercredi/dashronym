@@ -1,6 +1,6 @@
 name: dashronym
 description: Inline glossary tooltips for acronyms in Flutter text.
-version: 0.0.6
+version: 0.0.7
 homepage: https://pub.dev/packages/dashronym
 repository: https://github.com/chrismercredi/dashronym/
 issue_tracker: https://github.com/chrismercredi/dashronym/issues
@@ -8,6 +8,20 @@ topics:
   - text
   - tooltip
   - documentation
+  - acronyms
+  - a11y
+
+screenshots:
+  - description: Animated overview of Dashronym tooltips responding to user taps.
+    path: screenshots/0_dashronym.gif
+  - description: Dashronym shows inline acronym definitions with tappable tooltips.
+    path: screenshots/01_example-using-dashronym.png
+  - description: Tooltip stays visible mid-screen while reading long-form content.
+    path: screenshots/02_dashronym-visibility-mid-screen.png
+  - description: Tooltip positions above bottom-edge acronyms without clipping.
+    path: screenshots/03_dashronym-visibility-bottom-screen.png
+  - description: Custom themed tooltip card with branded colors and typography.
+    path: screenshots/04_dashronym-custom-card.png
 
 environment:
   sdk: '>=3.9.0 <4.0.0'
