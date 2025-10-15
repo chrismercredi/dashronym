@@ -1,3 +1,7 @@
+## 0.0.8
+
+- Fixed pubspec screenshot metadata quoting for pub.dev
+
 ## 0.0.7
 
 - Added annotated screenshots and an animated tooltip walkthrough to the package metadata so pub.dev showcases behavior.
