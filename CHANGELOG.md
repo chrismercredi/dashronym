@@ -3,6 +3,7 @@
 - Added annotated screenshots and an animated tooltip walkthrough to the package metadata so pub.dev showcases behavior.
 - Expanded pub.dev topics with acronym and accessibility tags to improve discoverability.
 - Documented localization constructors to maintain full dartdoc coverage for pub scoring.
+- Updated README installation instructions to reference version 0.0.7.
 
 ## 0.0.6
 
