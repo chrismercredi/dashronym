@@ -17,7 +17,7 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dashronym: ^0.0.6
+  dashronym: ^0.0.7
 ```
 
 Run `flutter pub get` to pull in the dependency.
