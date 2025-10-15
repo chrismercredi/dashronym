@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 /// bundled [delegate] alongside Flutter's built-in localization delegates to
 /// enable translations.
 class DashronymLocalizations {
+  /// Creates localization strings scoped to the given [locale].
   DashronymLocalizations(this.locale);
 
   /// The locale associated with these strings.
