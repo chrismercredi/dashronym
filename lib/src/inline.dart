@@ -1,5 +1,39 @@
+/// Dashronym inline trigger widgets and tooltip surface integration.
+///
+/// This file defines:
+///
+/// * [AcronymInline] — an inline, accessible trigger that shows a tooltip for a term.
+/// * [AcronymTooltipDetails] — the metadata passed to a custom [DashronymTooltipBuilder].
+/// * [DashronymTooltipBuilder] — a typedef for building a custom tooltip widget.
+///
+/// ### Sizing behavior at a glance
+/// The tooltip body is sized inside [DashronymTooltipCard], which caps its width
+/// to the smallest finite viewport or theme limit (with
+/// [DashronymTheme.tooltipMaxWidth] taking precedence when provided) and lets
+/// content wrap naturally at word boundaries. The inline widget intentionally
+/// **does not** impose a maximum width—it only enforces an optional minimum via
+/// [DashronymTheme.tooltipMinWidth] to avoid double capping.
+///
+/// ### Example
+/// ```dart
+/// Wrap(
+///   crossAxisAlignment: WrapCrossAlignment.center,
+///   spacing: 4,
+///   children: [
+///     const Text('Install the'),
+///     AcronymInline(
+///       acronym: 'SDK',
+///       description: 'Software Development Kit',
+///       theme: myDashronymTheme,
+///       textStyle: Theme.of(context).textTheme.bodyMedium,
+///     ),
+///     const Text('before continuing.'),
+///   ],
+/// );
+/// ```
+library;
+
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
@@ -8,6 +42,57 @@ import 'package:flutter/services.dart';
 import 'localizations.dart';
 import 'theme.dart';
 import 'tooltip_card.dart';
+import 'tooltip_positioner.dart';
+import 'tooltip_constraints.dart';
+
+/// Signature used to build a custom tooltip widget for [AcronymInline].
+///
+/// The function receives the current [BuildContext] and an [AcronymTooltipDetails]
+/// object describing the selected term. Return any widget you want to display as the
+/// tooltip body (e.g. a custom card, sheet, etc.).
+///
+/// ### Example
+/// ```dart
+/// AcronymInline(
+///   acronym: 'CI',
+///   description: 'Continuous Integration',
+///   theme: theme,
+///   textStyle: Theme.of(context).textTheme.bodyMedium,
+///   tooltipBuilder: (context, details) {
+///     return DashronymTooltipCard(
+///       acronym: details.acronym,
+///       description: details.description,
+///       theme: details.theme.copyWith(cardElevation: 8),
+///       onClose: details.hideTooltip,
+///     );
+///   },
+/// );
+/// ```
+typedef DashronymTooltipBuilder =
+    Widget Function(BuildContext context, AcronymTooltipDetails details);
+
+/// Data surfaced to [DashronymTooltipBuilder] implementations.
+class AcronymTooltipDetails {
+  /// Creates tooltip metadata provided to custom tooltip builders.
+  const AcronymTooltipDetails({
+    required this.acronym,
+    required this.description,
+    required this.theme,
+    required this.hideTooltip,
+  });
+
+  /// The acronym shown by the inline trigger.
+  final String acronym;
+
+  /// The long-form description associated with [acronym].
+  final String description;
+
+  /// The effective theme driving tooltip styling.
+  final DashronymTheme theme;
+
+  /// Callback that hides the tooltip overlay.
+  final VoidCallback hideTooltip;
+}
 
 /// An inline, tappable acronym that shows an accessible tooltip card.
 ///
@@ -27,24 +112,28 @@ import 'tooltip_card.dart';
 ///
 /// Typical usage inside a `WidgetSpan`:
 /// ```dart
-/// Text.rich(
-///   TextSpan(
-///     children: [
-///       const TextSpan(text: 'We use the '),
-///       WidgetSpan(
-///         alignment: PlaceholderAlignment.baseline,
-///         baseline: TextBaseline.alphabetic,
-///         child: AcronymInline(
-///           acronym: 'SDK',
-///           description: 'Software Development Kit',
-///           theme: DashronymTheme.fallback(),
-///           textStyle: DefaultTextStyle.of(context).style,
-///         ),
-///       ),
-///       const TextSpan(text: ' for plugins.'),
-///     ],
-///   ),
-/// )
+/// // Defaults
+/// Text('Tap (SDK) to learn more.')
+///     .dashronyms(registry: registry, config: config);
+///
+/// // Custom tooltip content
+/// Text('(API) tooltip with branded content.')
+///     .dashronyms(
+///       registry: registry,
+///       config: config,
+///       tooltipBuilder: (context, details) {
+///         return Card(
+///           child: ListTile(
+///             title: Text(details.acronym),
+///             subtitle: Text(details.description),
+///             trailing: IconButton(
+///               icon: const Icon(Icons.close),
+///               onPressed: details.hideTooltip,
+///             ),
+///           ),
+///         );
+///       },
+///     );
 /// ```
 ///
 /// Semantics:
@@ -64,6 +153,7 @@ class AcronymInline extends StatefulWidget {
     required this.description,
     required this.theme,
     required this.textStyle,
+    this.tooltipBuilder,
   });
 
   /// The acronym text shown inline (e.g., `"SDK"`).
@@ -82,12 +172,20 @@ class AcronymInline extends StatefulWidget {
   /// The trigger style is derived from this plus any overrides in [theme].
   final TextStyle? textStyle;
 
+  /// Allows callers to provide a custom tooltip instead of [DashronymTooltipCard].
+  final DashronymTooltipBuilder? tooltipBuilder;
+
+  /// Creates the backing state object.
+  ///
+  /// You typically do not need to call this.
   @override
   State<AcronymInline> createState() => _AcronymInlineState();
 }
 
 class _AcronymInlineState extends State<AcronymInline>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+  static _AcronymInlineState? _activeTooltip;
+
   final LayerLink _link = LayerLink();
   final FocusNode _focusNode = FocusNode(debugLabel: 'DashronymInline');
 
@@ -95,13 +193,17 @@ class _AcronymInlineState extends State<AcronymInline>
   bool _hovering = false;
   bool _tooltipVisible = false;
   Timer? _hoverHideTimer;
+  Timer? _announceDebounce;
+  ScrollPosition? _scrollPosition;
   late final TextStyle _style;
   late Duration _hoverHideDelay;
   late final AnimationController _fadeController;
-  late final Animation<double> _opacity;
+  late Animation<double> _opacity;
+  late Animation<double> _scale;
   final GlobalKey _tooltipKey = GlobalKey();
   Offset _followerOffset = Offset.zero;
   bool _isDisposing = false;
+  Orientation? _lastOrientation;
 
   static const double _viewportMargin = 8.0;
   static const double _offsetEpsilon = 0.5;
@@ -128,22 +230,31 @@ class _AcronymInlineState extends State<AcronymInline>
       duration: widget.theme.tooltipFadeDuration,
       value: 0,
     );
-    _opacity = CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeOut,
-      reverseCurve: Curves.easeIn,
-    );
+    _configureAnimations(widget.theme);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _isDisposing) return;
+      _attachScrollListener();
+    });
   }
 
   @override
   void dispose() {
     _isDisposing = true;
     _hoverHideTimer?.cancel();
+    _announceDebounce?.cancel();
+    _scrollPosition?.removeListener(_handleScrollDismiss);
+    _scrollPosition = null;
     _hide(immediate: true, announce: false);
     _focusNode.dispose();
     _fadeController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @visibleForTesting
+  void debugRemoveEntry() {
+    _entry?.remove();
+    _entry = null;
   }
 
   @override
@@ -155,35 +266,56 @@ class _AcronymInlineState extends State<AcronymInline>
         widget.theme.tooltipFadeDuration) {
       _fadeController.duration = widget.theme.tooltipFadeDuration;
     }
+    _configureAnimations(widget.theme);
     if (_tooltipVisible) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _tooltipVisible) {
-          _updateTooltipPosition();
-        }
-      });
+      _postFrameIfVisible(_updateTooltipPosition);
     }
   }
 
   @override
   void didChangeMetrics() {
     super.didChangeMetrics();
+    final orientation = _windowOrientation();
     if (_tooltipVisible) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _tooltipVisible) {
-          _updateTooltipPosition();
-        }
-      });
+      _hide(immediate: true);
+    }
+    if (orientation != null) {
+      _lastOrientation = orientation;
     }
   }
 
-  Offset _baseFollowerOffset(Size targetSize, TextDirection direction) {
-    final horizontalAdjustment = direction == TextDirection.rtl
-        ? -widget.theme.cardWidth + targetSize.width
-        : 0.0;
-    return Offset(
-      horizontalAdjustment + widget.theme.tooltipOffset.dx,
-      targetSize.height + widget.theme.tooltipOffset.dy,
-    );
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final orientation = MediaQuery.maybeOf(context)?.orientation;
+    if (orientation != null && _lastOrientation != orientation) {
+      if (_lastOrientation != null) {
+        _hide(immediate: true); // coverage:ignore-line
+      }
+      _lastOrientation = orientation;
+    }
+    _attachScrollListener();
+  }
+
+  Orientation? _windowOrientation() {
+    final views = WidgetsBinding.instance.platformDispatcher.views;
+    if (views.isEmpty) return null;
+    final view = views.first;
+    final logicalSize = view.physicalSize / view.devicePixelRatio;
+    if (logicalSize.width == 0 || logicalSize.height == 0) return null;
+    return logicalSize.width > logicalSize.height
+        ? Orientation.landscape
+        : Orientation.portrait;
+  }
+
+  void _attachScrollListener() {
+    if (_isDisposing) return;
+    final scrollableState = Scrollable.maybeOf(context);
+    final newPosition = scrollableState?.position;
+    if (identical(_scrollPosition, newPosition)) return;
+    _scrollPosition?.removeListener(_handleScrollDismiss);
+    _scrollPosition = newPosition;
+    _scrollPosition?.addListener(_handleScrollDismiss);
   }
 
   void _setFollowerOffset(Offset next) {
@@ -191,6 +323,59 @@ class _AcronymInlineState extends State<AcronymInline>
     _followerOffset = next;
     if (_isDisposing) return;
     _entry?.markNeedsBuild();
+  }
+
+  RenderBox? _boxOf(BuildContext? context, {bool requireSize = true}) {
+    if (!mounted || context == null) return null;
+    final renderObject = context.findRenderObject();
+    if (renderObject is! RenderBox || !renderObject.attached) return null;
+    if (requireSize && renderObject.hasSize && renderObject.size.isEmpty) {
+      return null;
+    }
+    return renderObject;
+  }
+
+  void _postFrameIfVisible(void Function() fn) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_tooltipVisible || _isDisposing) return;
+      fn();
+    });
+  }
+
+  void _handleScrollDismiss() {
+    if (!_tooltipVisible || _isDisposing) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _isDisposing) return;
+      _hide();
+    });
+  }
+
+  void _configureAnimations(DashronymTheme theme) {
+    _opacity = CurvedAnimation(
+      parent: _fadeController,
+      curve: theme.tooltipFadeInCurve,
+      reverseCurve: theme.tooltipFadeOutCurve,
+    );
+    _scale =
+        Tween<double>(
+          begin: theme.tooltipScaleBegin,
+          end: theme.tooltipScaleEnd,
+        ).animate(
+          CurvedAnimation(
+            parent: _fadeController,
+            curve: theme.tooltipScaleInCurve,
+            reverseCurve: theme.tooltipScaleOutCurve,
+          ),
+        );
+  }
+
+  void _announce(String message) {
+    if (_isDisposing) return;
+    _announceDebounce?.cancel();
+    _announceDebounce = Timer(const Duration(milliseconds: 200), () {
+      if (!mounted || _isDisposing) return;
+      SemanticsService.announce(message, Directionality.of(context));
+    });
   }
 
   void _toggle() {
@@ -206,19 +391,42 @@ class _AcronymInlineState extends State<AcronymInline>
     final overlay = Overlay.of(context, rootOverlay: true);
     _hoverHideTimer?.cancel();
 
-    final renderBox = context.findRenderObject() as RenderBox?;
+    final renderBox = _boxOf(context);
     final targetSize = renderBox?.size ?? Size.zero;
     final direction = Directionality.of(context);
     final strings = DashronymLocalizations.of(context);
-    _setFollowerOffset(_baseFollowerOffset(targetSize, direction));
+    _setFollowerOffset(
+      AcronymTooltipPositioner.baseFollowerOffset(
+        anchorSize: targetSize,
+        theme: widget.theme,
+        direction: direction,
+      ),
+    );
 
     _entry = OverlayEntry(
       builder: (context) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && _tooltipVisible) {
-            _updateTooltipPosition();
-          }
-        });
+        _postFrameIfVisible(_updateTooltipPosition);
+        final tooltipDetails = AcronymTooltipDetails(
+          acronym: widget.acronym,
+          description: widget.description,
+          theme: widget.theme,
+          hideTooltip: () => _hide(),
+        );
+        final builtTooltip =
+            widget.tooltipBuilder?.call(context, tooltipDetails) ??
+            DashronymTooltipCard(
+              acronym: widget.acronym,
+              description: widget.description,
+              theme: widget.theme,
+              onClose: () => _hide(),
+            );
+        final keyedTooltip = KeyedSubtree(
+          key: _tooltipKey,
+          child: _TooltipViewportClamp(
+            theme: widget.theme,
+            child: builtTooltip,
+          ),
+        );
         return Stack(
           children: [
             Positioned.fill(
@@ -234,13 +442,7 @@ class _AcronymInlineState extends State<AcronymInline>
               offset: _followerOffset,
               child: FadeTransition(
                 opacity: _opacity,
-                child: DashronymTooltipCard(
-                  key: _tooltipKey,
-                  acronym: widget.acronym,
-                  description: widget.description,
-                  theme: widget.theme,
-                  onClose: () => _hide(),
-                ),
+                child: ScaleTransition(scale: _scale, child: keyedTooltip),
               ),
             ),
           ],
@@ -249,34 +451,28 @@ class _AcronymInlineState extends State<AcronymInline>
     );
 
     overlay.insert(_entry!);
+    if (_activeTooltip != this) {
+      _activeTooltip?._hide(immediate: true, announce: false);
+    }
+    _activeTooltip = this;
     setState(() {
       _tooltipVisible = true;
     });
     _fadeController.forward(from: 0);
 
-    SemanticsService.announce(
-      strings.announceTooltipShown(widget.acronym),
-      direction,
-    );
+    _announce(strings.announceTooltipShown(widget.acronym));
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && _tooltipVisible) {
-        _updateTooltipPosition();
-      }
-    });
+    _postFrameIfVisible(_updateTooltipPosition);
   }
 
   void _hide({bool immediate = false, bool announce = true}) {
     _hoverHideTimer?.cancel();
     if (_entry == null) {
-      if (_tooltipVisible && mounted && !_isDisposing) {
-        setState(() {
-          _tooltipVisible = false;
-          _hovering = false;
-        });
-      } else {
-        _tooltipVisible = false;
-        _hovering = false;
+      final shouldNotify = _tooltipVisible && mounted && !_isDisposing;
+      _tooltipVisible = false;
+      _hovering = false;
+      if (shouldNotify) {
+        setState(() {}); // coverage:ignore-line
       }
       return;
     }
@@ -284,6 +480,9 @@ class _AcronymInlineState extends State<AcronymInline>
     void completeRemoval() {
       _entry?.remove();
       _entry = null;
+      if (identical(_activeTooltip, this)) {
+        _activeTooltip = null;
+      }
       if (!mounted || _isDisposing) {
         _hovering = false;
         return;
@@ -293,10 +492,7 @@ class _AcronymInlineState extends State<AcronymInline>
       });
       if (announce && !_isDisposing) {
         final strings = DashronymLocalizations.of(context);
-        SemanticsService.announce(
-          strings.announceTooltipHidden(widget.acronym),
-          Directionality.of(context),
-        );
+        _announce(strings.announceTooltipHidden(widget.acronym));
       }
     }
 
@@ -322,27 +518,16 @@ class _AcronymInlineState extends State<AcronymInline>
     if (!_tooltipVisible) return;
 
     final overlay = Overlay.of(context, rootOverlay: true);
-    final overlayRenderObject = overlay.context.findRenderObject();
-    final targetRenderObject = context.findRenderObject();
-    final tooltipContext = _tooltipKey.currentContext;
-    final tooltipRenderObject = tooltipContext?.findRenderObject();
+    final overlayBox = _boxOf(overlay.context);
+    final targetBox = _boxOf(context);
+    final tooltipBox = _boxOf(_tooltipKey.currentContext, requireSize: false);
 
-    if (overlayRenderObject is! RenderBox || targetRenderObject is! RenderBox) {
+    if (overlayBox == null || targetBox == null || tooltipBox == null) {
+      if (tooltipBox == null) {
+        _postFrameIfVisible(_updateTooltipPosition); // coverage:ignore-line
+      }
       return;
     }
-
-    if (tooltipRenderObject is! RenderBox) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _tooltipVisible) {
-          _updateTooltipPosition();
-        }
-      });
-      return;
-    }
-
-    final overlayBox = overlayRenderObject;
-    final targetBox = targetRenderObject;
-    final tooltipBox = tooltipRenderObject;
 
     final overlaySize = overlayBox.size;
     final anchorTopLeft = targetBox.localToGlobal(
@@ -354,58 +539,20 @@ class _AcronymInlineState extends State<AcronymInline>
     final mediaQuery = MediaQuery.maybeOf(context);
 
     final padding = mediaQuery?.padding ?? EdgeInsets.zero;
-    final keyboardInset = mediaQuery != null
-        ? math.max(mediaQuery.viewInsets.bottom, 0.0)
-        : 0.0;
+    final rawKeyboardInset = mediaQuery?.viewInsets.bottom ?? 0.0;
+    final keyboardInset = rawKeyboardInset < 0.0 ? 0.0 : rawKeyboardInset;
 
-    final baseOffset = _baseFollowerOffset(anchorSize, direction);
-    final cardSize = tooltipBox.size;
-
-    final availableWidth = overlaySize.width - padding.left - padding.right;
-    double horizontalMargin = _viewportMargin;
-    final double horizontalMarginTotal = horizontalMargin * 2;
-    if (cardSize.width + horizontalMarginTotal > availableWidth) {
-      horizontalMargin = math.max(0.0, (availableWidth - cardSize.width) / 2.0);
-    }
-
-    final minLeft = padding.left + horizontalMargin;
-    final maxLeft =
-        overlaySize.width - padding.right - horizontalMargin - cardSize.width;
-
-    final availableHeight =
-        overlaySize.height - padding.top - padding.bottom - keyboardInset;
-    double verticalMargin = _viewportMargin;
-    final double verticalMarginTotal = verticalMargin * 2;
-    if (cardSize.height + verticalMarginTotal > availableHeight) {
-      verticalMargin = math.max(0.0, (availableHeight - cardSize.height) / 2.0);
-    }
-
-    final safeTop = padding.top + verticalMargin;
-    final safeBottomLimit =
-        overlaySize.height - padding.bottom - keyboardInset - verticalMargin;
-
-    double left = anchorTopLeft.dx + baseOffset.dx;
-    if (minLeft <= maxLeft) {
-      left = left.clamp(minLeft, maxLeft);
-    } else {
-      left = minLeft;
-    }
-
-    final double desiredBelow = anchorTopLeft.dy + baseOffset.dy;
-    double top = desiredBelow;
-    final bool fitsBelow = desiredBelow + cardSize.height <= safeBottomLimit;
-    final double desiredAbove =
-        anchorTopLeft.dy - cardSize.height - widget.theme.tooltipOffset.dy;
-    final bool fitsAbove = desiredAbove >= safeTop;
-
-    if (!fitsBelow && fitsAbove) {
-      top = desiredAbove;
-    } else {
-      top = math.min(desiredBelow, safeBottomLimit - cardSize.height);
-      top = math.max(top, safeTop);
-    }
-
-    final newOffset = Offset(left - anchorTopLeft.dx, top - anchorTopLeft.dy);
+    final newOffset = AcronymTooltipPositioner.resolveFollowerOffset(
+      overlaySize: overlaySize,
+      anchorTopLeft: anchorTopLeft,
+      anchorSize: anchorSize,
+      tooltipSize: tooltipBox.size,
+      theme: widget.theme,
+      padding: padding,
+      keyboardInset: keyboardInset,
+      direction: direction,
+      viewportMargin: _viewportMargin,
+    );
 
     _setFollowerOffset(newOffset);
   }
@@ -485,6 +632,29 @@ class _AcronymInlineState extends State<AcronymInline>
       value: _tooltipVisible ? widget.description : null,
       onTap: _toggle,
       child: result,
+    );
+  }
+}
+
+class _TooltipViewportClamp extends StatelessWidget {
+  const _TooltipViewportClamp({required this.theme, required this.child});
+
+  final DashronymTheme theme;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.maybeOf(context);
+    return LayoutBuilder(
+      builder: (context, parentConstraints) {
+        final mqForBuilder = MediaQuery.maybeOf(context) ?? mediaQuery;
+        final resolvedConstraints = TooltipConstraintsResolver.resolve(
+          constraints: parentConstraints,
+          mediaQuery: mqForBuilder,
+          theme: theme,
+        );
+        return ConstrainedBox(constraints: resolvedConstraints, child: child);
+      },
     );
   }
 }

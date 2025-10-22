@@ -30,4 +30,51 @@ void main() {
     expect(result.textSpan, same(original.textSpan));
     expect(result.textScaler, const TextScaler.linear(1.2));
   });
+
+  testWidgets('Text.dashronyms merges inherited style and bold text', (
+    tester,
+  ) async {
+    final registry = AcronymRegistry({'SDK': 'Software Development Kit'});
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(boldText: true),
+          child: DefaultTextStyle(
+            style: const TextStyle(fontSize: 14),
+            child: Scaffold(
+              body: const Text(
+                'SDK launch successful',
+              ).dashronyms(registry: registry),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pump();
+
+    final richText = tester.widget<RichText>(find.byType(RichText));
+    expect(richText.text.style?.fontWeight, FontWeight.bold);
+  });
+
+  testWidgets('Text.dashronyms keeps explicit non-inherited style', (
+    tester,
+  ) async {
+    final registry = AcronymRegistry({'SDK': 'Software Development Kit'});
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: const Text(
+            'SDK ready',
+            style: TextStyle(inherit: false, fontSize: 22),
+          ).dashronyms(registry: registry),
+        ),
+      ),
+    );
+
+    final richText = tester.widget<RichText>(find.byType(RichText));
+    expect(richText.text.style?.fontSize, 22);
+  });
 }
