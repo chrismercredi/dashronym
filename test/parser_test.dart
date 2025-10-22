@@ -28,4 +28,25 @@ void main() {
 
     expect(identical(first, second), isTrue);
   });
+
+  test('DashronymParser matches bare acronyms within length bounds', () {
+    final parser = DashronymParser(
+      registry: AcronymRegistry({
+        'SDK': 'Software Development Kit',
+        'CI': 'Continuous Integration',
+      }),
+      config: const DashronymConfig(
+        enableBareAcronyms: true,
+        minLen: 2,
+        maxLen: 3,
+      ),
+      theme: const DashronymTheme(),
+      baseStyle: const TextStyle(),
+    );
+
+    final spans = parser.parseToSpans('SDK tooling and CI runs');
+    final widgetSpans = spans.whereType<WidgetSpan>().toList(growable: false);
+
+    expect(widgetSpans.length, 2);
+  });
 }

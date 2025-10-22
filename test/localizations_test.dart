@@ -20,5 +20,14 @@ void main() {
     );
     expect(strings.announceTooltipShown('SDK'), 'Showing definition for SDK.');
     expect(strings.closeButtonTooltip('SDK'), 'Hide definition for SDK');
+    expect(strings.semanticsBarrierLabel('SDK'), 'Hide definition for SDK.');
+    expect(strings.closeButtonLabel('SDK'), 'Close definition for SDK');
+    expect(strings.tooltipLabel('SDK'), 'Definition for SDK');
+  });
+
+  test('DashronymLocalizations delegate never reloads', () {
+    const delegate = DashronymLocalizations.delegate;
+    expect(delegate.isSupported(const Locale('en')), isTrue);
+    expect(delegate.shouldReload(delegate), isFalse);
   });
 }

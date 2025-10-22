@@ -1,3 +1,10 @@
+## 0.0.9
+
+- Introduced a shared `TooltipConstraintsResolver` so every tooltip (stock or custom) respects viewport gutters plus new orientation caps: 360 px portrait, 600 px landscape.
+- Wrapped inline tooltips with the resolver, ensuring custom builders inherit the same clamp logic while overlays keep the existing follower nudge/scroll dismissal behaviour.
+- Expanded unit and widget coverage (100 % lines) with constraint, positioner, orientation-change, and scroll-dismiss tests; refreshed all inline goldens.
+- Replaced the published screenshots with the latest portrait/landscape captures and updated README guidance to highlight the new sizing rules.
+
 ## 0.0.8
 
 - Fixed pubspec screenshot metadata quoting for pub.dev
