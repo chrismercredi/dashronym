@@ -46,7 +46,6 @@ import 'tooltip_positioner.dart';
 import 'tooltip_constraints.dart';
 
 /// Signature used to build a custom tooltip widget for [AcronymInline].
-/// Signature for building a custom tooltip widget used by [AcronymInline].
 ///
 /// The function receives the current [BuildContext] and an [AcronymTooltipDetails]
 /// object describing the selected term. Return any widget you want to display as the
