@@ -69,7 +69,7 @@ class DashronymTooltipCard extends StatelessWidget {
         ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700);
     final subtitleStyle =
         theme.cardSubtitleStyle ??
-        Theme.of(context).textTheme.bodyMedium?.copyWith(letterSpacing: 0);
+        Theme.of(context).textTheme.bodyMedium;
 
     return Semantics(
       container: true,
