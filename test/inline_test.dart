@@ -320,6 +320,8 @@ void main() {
     expect(find.byType(DashronymTooltipCard), findsOneWidget);
 
     final state = tester.state(find.byKey(const ValueKey('inline')));
+    // Intentionally using `dynamic` to access the internal test helper `debugRemoveEntry()`.
+    // This bypasses type safety, but is appropriate for test code to verify internal state.
     (state as dynamic).debugRemoveEntry();
     await tester.tap(find.byKey(const ValueKey('inline')));
     await tester.pumpAndSettle();
