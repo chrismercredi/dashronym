@@ -39,8 +39,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 
-import 'localizations.dart';
-import 'theme.dart';
+import 'dashronym_localizations.dart';
+import 'dashronym_theme.dart';
 import 'tooltip_card.dart';
 import 'tooltip_positioner.dart';
 import 'tooltip_constraints.dart';
@@ -112,34 +112,29 @@ class AcronymTooltipDetails {
 ///
 /// Typical usage inside a `WidgetSpan`:
 /// ```dart
-/// // Defaults
-/// Text('Tap (SDK) to learn more.')
-///     .dashronyms(registry: registry, config: config);
-///
-/// // Custom tooltip content
-/// Text('(API) tooltip with branded content.')
-///     .dashronyms(
-///       registry: registry,
-///       config: config,
-///       tooltipBuilder: (context, details) {
-///         return Card(
-///           child: ListTile(
-///             title: Text(details.acronym),
-///             subtitle: Text(details.description),
-///             trailing: IconButton(
-///               icon: const Icon(Icons.close),
-///               onPressed: details.hideTooltip,
-///             ),
-///           ),
-///         );
-///       },
-///     );
+/// Text.rich(
+///   TextSpan(
+///     children: [
+///       WidgetSpan(
+///         alignment: PlaceholderAlignment.baseline,
+///         baseline: TextBaseline.alphabetic,
+///         child: AcronymInline(
+///           acronym: 'SDK',
+///           description: 'Software Development Kit',
+///           theme: myDashronymTheme,
+///           textStyle: Theme.of(context).textTheme.bodyMedium,
+///         ),
+///       ),
+///     ],
+///   ),
+/// );
 /// ```
 ///
 /// Semantics:
 /// This widget exposes a button role with a dynamic hint (show/hide) and, when
 /// open, sets [Semantics.value] to the [description]. It also uses
-/// [SemanticsService.announce] for polite announcements.
+/// [SemanticsService.sendAnnouncement] for polite announcements, scoped to the
+/// current [View].
 ///
 /// Layout/overlay:
 /// Uses a [CompositedTransformTarget]/[CompositedTransformFollower] pair to
@@ -374,7 +369,12 @@ class _AcronymInlineState extends State<AcronymInline>
     _announceDebounce?.cancel();
     _announceDebounce = Timer(const Duration(milliseconds: 200), () {
       if (!mounted || _isDisposing) return;
-      SemanticsService.announce(message, Directionality.of(context));
+      final view = View.of(context);
+      SemanticsService.sendAnnouncement(
+        view,
+        message,
+        Directionality.of(context),
+      );
     });
   }
 

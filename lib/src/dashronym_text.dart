@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 
 import 'config.dart';
-import 'parser.dart';
+import 'acronym_parser.dart';
+import 'acronym_inline.dart';
 import 'registry.dart';
-import 'theme.dart';
+import 'dashronym_theme.dart';
 
 /// Renders text with inline, accessible glossary tooltips for matched acronyms.
 ///
 /// This widget scans [text] using the provided [AcronymRegistry] and replaces
-/// matches with interactive [WidgetSpan]s (see `AcronymInline`) while
+/// matches with interactive [WidgetSpan]s (see [AcronymInline]) while
 /// preserving your typography, layout, and semantics. Non-matching text is
 /// emitted as regular [TextSpan]s. The result is painted by a [RichText]
 /// configured from the surrounding [DefaultTextStyle] and the provided
@@ -40,6 +41,7 @@ class DashronymText extends StatelessWidget {
     required this.registry,
     this.config = const DashronymConfig(),
     this.theme = const DashronymTheme(),
+    this.tooltipBuilder,
     this.style,
     this.strutStyle,
     this.textAlign,
@@ -66,6 +68,13 @@ class DashronymText extends StatelessWidget {
 
   /// Visual customization for the inline trigger and the tooltip card.
   final DashronymTheme theme;
+
+  /// Optional builder for a custom tooltip widget.
+  ///
+  /// When provided, this is passed down to the underlying inline controls so
+  /// you can replace the stock [DashronymTooltipCard] while keeping the same
+  /// trigger, overlay, and semantics behavior.
+  final DashronymTooltipBuilder? tooltipBuilder;
 
   /// Base text style for the output spans.
   ///
@@ -151,6 +160,7 @@ class DashronymText extends StatelessWidget {
       config: config,
       theme: theme,
       baseStyle: resolvedStyle,
+      tooltipBuilder: tooltipBuilder,
     ).parseToSpans(text);
 
     Widget result = RichText(

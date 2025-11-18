@@ -4,6 +4,7 @@ import 'package:dashronym/dashronym.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dashronym/src/acronym_inline.dart';
 import 'package:dashronym/src/tooltip_constraints.dart';
 
 Future<void> _pumpInline(

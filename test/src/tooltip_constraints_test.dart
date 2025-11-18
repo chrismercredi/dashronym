@@ -1,4 +1,4 @@
-import 'package:dashronym/src/theme.dart';
+import 'package:dashronym/src/dashronym_theme.dart';
 import 'package:dashronym/src/tooltip_constraints.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';

@@ -4,5 +4,5 @@ include: package:flutter_lints/flutter.yaml
 # https://dart.dev/guides/language/analysis-options
 
 analyzer:
-  exclude:
-    - test/**
+  # Analyze tests with the same lints as the package code.
+  # Add targeted ignores here if any golden harness files require it.
