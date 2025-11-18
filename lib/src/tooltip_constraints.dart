@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
 
-import 'theme.dart';
+import 'dashronym_theme.dart';
 
 /// Shared helpers for clamping tooltip content within the visible viewport.
 ///

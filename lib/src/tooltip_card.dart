@@ -8,8 +8,8 @@ library;
 
 import 'package:flutter/material.dart';
 
-import 'localizations.dart';
-import 'theme.dart';
+import 'dashronym_localizations.dart';
+import 'dashronym_theme.dart';
 import 'tooltip_constraints.dart';
 
 /// A compact, accessible tooltip card displaying an acronym and its description.
@@ -68,8 +68,7 @@ class DashronymTooltipCard extends StatelessWidget {
           context,
         ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700);
     final subtitleStyle =
-        theme.cardSubtitleStyle ??
-        Theme.of(context).textTheme.bodyMedium;
+        theme.cardSubtitleStyle ?? Theme.of(context).textTheme.bodyMedium;
 
     return Semantics(
       container: true,

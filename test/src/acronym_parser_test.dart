@@ -1,4 +1,6 @@
 import 'package:dashronym/dashronym.dart';
+import 'package:dashronym/src/acronym_parser.dart';
+import 'package:dashronym/src/acronym_parser_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -22,9 +24,12 @@ void main() {
   });
 
   test('DashronymParser caches spans for identical input', () {
-    final parser = _parser();
-    final first = parser.parseToSpans('Using (SDK) daily.');
-    final second = parser.parseToSpans('Using (SDK) daily.');
+    final core = DashronymParserCore(
+      registry: AcronymRegistry({'SDK': 'Software Development Kit'}),
+      config: const DashronymConfig(enableBareAcronyms: true),
+    );
+    final first = core.parse('Using (SDK) daily.');
+    final second = core.parse('Using (SDK) daily.');
 
     expect(identical(first, second), isTrue);
   });

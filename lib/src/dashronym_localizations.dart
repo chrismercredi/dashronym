@@ -74,16 +74,20 @@ class _DashronymLocalizationsDelegate
     extends LocalizationsDelegate<DashronymLocalizations> {
   const _DashronymLocalizationsDelegate();
 
-  @override
   /// Whether this delegate supports [locale].
-  bool isSupported(Locale locale) => true;
-
   @override
+  bool isSupported(Locale locale) {
+    return DashronymLocalizations.supportedLocales.any(
+      (supported) => supported.languageCode == locale.languageCode,
+    );
+  }
+
   /// Loads localization resources for [locale].
+  @override
   Future<DashronymLocalizations> load(Locale locale) =>
       SynchronousFuture(DashronymLocalizations(locale));
 
-  @override
   /// Whether this delegate should reload when [old] changes.
+  @override
   bool shouldReload(_DashronymLocalizationsDelegate old) => false;
 }

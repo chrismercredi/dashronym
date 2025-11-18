@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
 
-import 'theme.dart';
+import 'dashronym_theme.dart';
 
 /// Computes follower offsets for the inline acronym tooltip overlay.
 ///
@@ -15,9 +15,11 @@ class AcronymTooltipPositioner {
   /// Returns the baseline follower offset relative to the anchor before any
   /// viewport clamping is applied.
   ///
-  /// The result positions the tooltip immediately below the inline trigger,
-  /// respecting only the configured [DashronymTheme.tooltipOffset]. Horizontal
-  /// clamping happens later once the actual tooltip size is known.
+  /// The result positions the tooltip immediately below the inline trigger.
+  ///
+  /// Horizontal placement is refined later in [resolveFollowerOffset] once the
+  /// tooltip size is known; here we only apply the vertical component from
+  /// [DashronymTheme.tooltipOffset].
   static Offset baseFollowerOffset({
     required Size anchorSize,
     required DashronymTheme theme,
@@ -92,7 +94,12 @@ class AcronymTooltipPositioner {
         overlaySize.height - padding.bottom - keyboardInset - verticalMargin;
 
     const edgeNudge = 8.0;
-    final desiredLeft = anchorTopLeft.dx + baseOffset.dx;
+    final desiredLeft = direction == TextDirection.ltr
+        ? anchorTopLeft.dx + baseOffset.dx
+        : anchorTopLeft.dx +
+              anchorSize.width -
+              tooltipSize.width -
+              theme.tooltipOffset.dx;
     double left = desiredLeft;
     if (minLeft <= maxLeft) {
       left = left.clamp(minLeft, maxLeft).toDouble();
@@ -105,14 +112,7 @@ class AcronymTooltipPositioner {
         left -= math.min(edgeNudge, available);
       }
     } else {
-      final clampedMax = overlaySize.width - padding.right - tooltipSize.width;
-      if (clampedMax < padding.left) {
-        left = padding.left;
-      } else {
-        left = desiredLeft
-            .clamp(padding.left, clampedMax)
-            .toDouble(); // coverage:ignore-line
-      }
+      left = padding.left;
     }
 
     final desiredBelow = anchorTopLeft.dy + baseOffset.dy;

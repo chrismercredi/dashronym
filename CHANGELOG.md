@@ -1,3 +1,16 @@
+## 0.0.10
+
+- Updated inline tooltip semantics to use `SemanticsService.sendAnnouncement` with `View.of(context)` so screen reader announcements remain polite and compatible with multi-window Flutter apps.
+- Bumped tooling to `flutter_lints` ^6.0.0 and refreshed formatting to keep `dart analyze` clean on Dart 3.10 / Flutter 3.38.
+- Verified package health on pub.dev (160/160 score) and dry-run publishing on the latest stable toolchain.
+- Slimmed the public API surface to focus on `DashronymText`, `AcronymRegistry`, `DashronymConfig`, `DashronymTheme`, and `DashronymLocalizations`, keeping overlay widgets, parsers, and LRU caching as internal `lib/src/` details.
+- Kept the `Text.dashronyms()` extension as a convenient way to enhance existing `Text` widgets, while implementing it in terms of `DashronymText` so both paths share the same behavior.
+- Renamed internal files to clearer, feature-oriented names (for example: `acronym_inline.dart`, `acronym_parser.dart`, `lru_cache.dart`, `dashronym_theme.dart`, `dashronym_localizations.dart`) and updated docs/tests to match.
+- Split the parsing pipeline into a pure-Dart core (`DashronymParserCore` + `DashronymToken`s) and a small Flutter adapter (`DashronymParser`) that builds spans and inline widgets.
+- Documented the internal layering and responsibilities in the codebase so domain logic and presentation concerns are clearly separated.
+- Tightened README and in-code documentation to keep `DashronymText` as the primary API while keeping the `Text.dashronyms()` extension as a convenience helper for existing `Text` widgets.
+- Made tooltip positioning explicitly respect [TextDirection], so RTL layouts bias the tooltip horizontally from the anchor’s right edge and updated the inline goldens to match.
+
 ## 0.0.9
 
 - Introduced a shared `TooltipConstraintsResolver` so every tooltip (stock or custom) respects viewport gutters plus new orientation caps: 360 px portrait, 600 px landscape.

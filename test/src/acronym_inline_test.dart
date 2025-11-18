@@ -1,9 +1,9 @@
 import 'dart:ui' show PointerDeviceKind;
 
 import 'package:dashronym/dashronym.dart';
-import 'package:flutter/foundation.dart';
+import 'package:dashronym/src/acronym_inline.dart';
+import 'package:dashronym/src/tooltip_card.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -77,7 +77,7 @@ void main() {
 
     final semanticsFinder = find.bySemanticsLabel('SDK').first;
     final semanticsNode = tester.getSemantics(semanticsFinder);
-    expect(semanticsNode.hasFlag(SemanticsFlag.isButton), isTrue);
+    expect(semanticsNode.flagsCollection.isButton, isTrue);
 
     semantics.dispose();
   });
@@ -85,13 +85,12 @@ void main() {
   testWidgets('Tooltip repositions to remain within the viewport', (
     tester,
   ) async {
-    final binding = tester.binding;
-    final originalLogicalSize =
-        binding.window.physicalSize / binding.window.devicePixelRatio;
+    final view = tester.view;
+    final originalLogicalSize = view.physicalSize / view.devicePixelRatio;
 
-    await binding.setSurfaceSize(const Size(220, 320));
+    await tester.binding.setSurfaceSize(const Size(220, 320));
     addTearDown(() async {
-      await binding.setSurfaceSize(originalLogicalSize);
+      await tester.binding.setSurfaceSize(originalLogicalSize);
     });
 
     await tester.pumpWidget(
@@ -111,8 +110,7 @@ void main() {
     final cardFinder = find.byType(DashronymTooltipCard);
     expect(cardFinder, findsOneWidget);
 
-    final screenSize =
-        binding.window.physicalSize / binding.window.devicePixelRatio;
+    final screenSize = view.physicalSize / view.devicePixelRatio;
     final topLeft = tester.getTopLeft(cardFinder);
     final topRight = tester.getTopRight(cardFinder);
     final bottomLeft = tester.getBottomLeft(cardFinder);
@@ -340,8 +338,9 @@ void main() {
     tester,
   ) async {
     final binding = tester.binding;
+    final view = tester.view;
     final originalLogicalSize =
-        binding.window.physicalSize / binding.window.devicePixelRatio;
+        view.physicalSize / view.devicePixelRatio;
 
     await binding.setSurfaceSize(const Size(360, 640));
     addTearDown(() async {

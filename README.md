@@ -1,12 +1,13 @@
 # dashronym
 
-dashronym creates inline glossary cards for acronyms that appear inside your Flutter text widgets. Authors can mark acronyms like `(SDK)` or rely on bare ALL-CAPS matches, and the extension transforms them into tappable overlays that surface full descriptions without breaking reading flow.
+dashronym adds inline glossary cards for acronyms that appear inside your Flutter text widgets. Authors can mark acronyms like `(SDK)` or rely on bare ALL-CAPS matches, and the package renders them as tappable overlays that show short definitions without interrupting reading.
 
 ## Features
 
 - Ready-to-use defaults with accessible semantics, keyboard support, and single-overlay focus management.
-- `Text.dashronyms()` extension that swaps matching tokens for interactive `WidgetSpan`s.
-- `DashronymText` widget for composing standalone rich text blocks.
+- Polite, multi-window-safe announcements using Flutter’s latest semantics APIs (`SemanticsService.sendAnnouncement` via `View.of(context)`).
+- `Text.dashronyms()` extension for enhancing existing `Text` widgets with inline glossary tooltips.
+- `DashronymText` widget for composing standalone rich text blocks when you want a dedicated component.
 - Configurable matching (`DashronymConfig`) with optional bare acronym detection.
 - Theme controls (`DashronymTheme`) for underline styles, hover behaviour, fade + scale animations, and width constraints with `copyWith` / `merge`.
 - Tooltip cards shrink-wrap to their content while honoring viewport, theme caps, and orientation-specific guardrails (360 px portrait / 600 px landscape) so descriptions wrap naturally without manual text measurement.
@@ -20,14 +21,19 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dashronym: ^0.0.9
+  dashronym: ^0.0.10
 ```
 
 Run `flutter pub get` to pull in the dependency.
 
+This package targets Dart `>=3.9.0 <4.0.0` and Flutter `>=3.19.0`, and is tested on Flutter `3.38.1` / Dart `3.10.0`.
+
 ## Quick start
 
 ```dart
+import 'package:dashronym/dashronym.dart';
+import 'package:flutter/material.dart';
+
 final registry = AcronymRegistry({
   'SDK': 'Software Development Kit',
   'API': 'Application Programming Interface',
@@ -39,14 +45,26 @@ class OverviewText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Text(
+    return DashronymText(
       'Our (SDK) exposes a lightweight (API) for CLI tooling.',
-    ).dashronyms(
       registry: registry,
       config: const DashronymConfig(enableBareAcronyms: true),
+      style: Theme.of(context).textTheme.bodyMedium,
     );
   }
 }
+```
+
+For existing `Text` widgets, you can also use the `Text.dashronyms()` extension:
+
+```dart
+Text(
+  'Our (SDK) exposes a lightweight API.',
+  style: Theme.of(context).textTheme.bodyMedium,
+).dashronyms(
+  registry: registry,
+  config: const DashronymConfig(enableBareAcronyms: true),
+);
 ```
 
 Take a look at the `/example` app for a longer, article-style demonstration that highlights theming and advanced usage.
@@ -67,30 +85,21 @@ const customConfig = DashronymConfig(
   acceptMarkers: ['«»'],
 );
 
-Text('Tap «SDK» to learn more.')
-    .dashronyms(registry: registry, config: customConfig, theme: accentTheme);
+DashronymText(
+  'Tap «SDK» to learn more.',
+  registry: registry,
+  config: customConfig,
+  theme: accentTheme,
+  style: Theme.of(context).textTheme.bodyMedium,
+);
 
-Text('«API» tooltip with branded content.')
-    .dashronyms(
-      registry: registry,
-      config: customConfig,
-      tooltipBuilder: (context, details) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Card(
-            color: Colors.indigo.shade50,
-            child: ListTile(
-              title: Text(details.acronym),
-              subtitle: Text(details.description),
-              trailing: IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: details.hideTooltip,
-              ),
-            ),
-          ),
-        );
-      },
-    );
+DashronymText(
+  '«API» tooltip with branded content.',
+  registry: registry,
+  config: customConfig,
+  theme: accentTheme,
+  style: Theme.of(context).textTheme.bodyMedium,
+);
 ```
 
 The `packagetester/tester` app shows the defaults alongside themed variants so you can compare configurations quickly. Custom builders automatically inherit the active theme’s width constraints, so bespoke surfaces stay within the edge gutter while still expanding vertically for lengthy copy.
@@ -108,4 +117,4 @@ The `packagetester/tester` app shows the defaults alongside themed variants so y
 
 Contributions, issues, and feature requests are welcome! Please open an issue on the [GitHub tracker](https://github.com/chrismercredi/dashronym/issues).
 
-When tweaking visuals, run `flutter test --update-goldens test/inline_golden_test.dart` to refresh the tooltip goldens.
+When tweaking visuals, run `flutter test --update-goldens test/src/acronym_inline_golden_test.dart` to refresh the tooltip goldens.
